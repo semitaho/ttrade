@@ -21,22 +21,7 @@ exports.createBrowser = async () => {
   return page;
 }
 
-exports.loginNetsuite = async (page) => {
 
-  await page.goto('https://system.na0.netsuite.com/pages/customerlogin.jsp');
-  console.log('navigation success...');
-  await page.waitFor('input[id=userName]');
-  await page.type('#userName', 'toni@tahoo.fi');
-  console.log('username given');
-  await page.waitFor(500);
-  await page.type('#password', process.env.NORDNET_PASSWORD);
-  console.log('password given');
-  await page.waitFor(500)
-  await page.click('#submitButton');
-
-
-
-}
 exports.login = async (page) => {
   await page.goto('https://www.nordnet.fi/fi');
   let link = await page.waitForXPath("//a[contains(., 'Kirjaudu sisään')]");

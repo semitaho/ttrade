@@ -17,7 +17,6 @@ exports.checkStocks = async (req, res) => {
 // Call start
 (async() => {
     console.log('before start');
-  
     await doJob();
     console.log('after start');
   })();

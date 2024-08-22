@@ -48,7 +48,6 @@ const checkSellOsake = async (page, inderesSellList, yleistiedot) => {
 exports.doJob = async () => {
 
   const page = await createBrowser();
-  const inderesList = await fetchVertailut(page);
   await login(page);
   const yleistiedot = await fetchYleistiedot(page);
 
