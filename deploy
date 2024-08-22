@@ -1,0 +1,1 @@
+gcloud functions deploy checkStocks --trigger-topic  check-stocks-topic --region europe-west1  --runtime nodejs10
