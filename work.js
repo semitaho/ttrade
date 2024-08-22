@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-const { createBrowser, fetchYleistiedot, fetchVertailut, getCurrentOsakeMyyntihinta, login, navigateToOsakePage, keraaOsakeData, keraaSeurantalistaOsakkeet, buy, sell } = require('./nordnet-robot');
+const { createBrowser, fetchYleistiedot, fetchVertailut, getCurrentOsakeMyyntihinta, acceptCookies, login, navigateToOsakePage, keraaOsakeData, keraaSeurantalistaOsakkeet, buy, sell } = require('./nordnet-robot');
 const { VOITTO, VALITYSPALKKIOBUYSELL, SUMMAPERINDIKAATTORI } = require('./indicators');
 
 const AIKA_BETWEEN_MINUTES = 5;
@@ -48,7 +48,10 @@ const checkSellOsake = async (page, inderesSellList, yleistiedot) => {
 exports.doJob = async () => {
 
   const page = await createBrowser();
+  await page.goto('https://www.nordnet.fi/kirjaudu');
+  await acceptCookies(page);
   await login(page);
+  /*
   const yleistiedot = await fetchYleistiedot(page);
 
   const inderesBuyList = inderesList.filter((instrument) => instrument.suositus === 'Lisää' || instrument.suositus === 'Osta')
@@ -101,4 +104,7 @@ exports.doJob = async () => {
       break;
     }
   }
+
+    */
+
 }

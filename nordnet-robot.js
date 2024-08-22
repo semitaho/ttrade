@@ -22,18 +22,32 @@ exports.createBrowser = async () => {
 }
 
 
-exports.login = async (page) => {
-  await page.goto('https://www.nordnet.fi/fi');
-  let link = await page.waitForXPath("//a[contains(., 'Kirjaudu sisään')]");
+exports.acceptCookies = async(page) => {
+  await page.click("#cookie-accept-all-secondary");
 
-  await link.click();
+}
+
+exports.login = async(page) => {
+  console.log("cookies accepted!");
+  
+  const button = await page.waitForXPath("//button[contains(., 'toinen kirjautumistapa')]");
+  await button.click();
+  const button2 = await page.waitForXPath("//button[contains(., 'käyttäjätunnus ja salasana')]");
+  await button2.click();
+
+
+  //await link.click();
   console.log('login info loaded');
-  await page.waitFor('input[id=username]');
-  await page.type('#username', process.env.NORDNET_USERNAME);
+  
+  await page.type('[name="username"]', 'tojuaho@gmail.com');
+  await page.type('[name="password"]', process.env.NORDNET_PASSWORD);
+  await page.click('#login-submit');
+
+  /*
   await page.waitFor('input[id=password]');
   await page.type('#password', process.env.NORDNET_PASSWORD);
-  await page.click('.button.primary');
   return await page.waitForNavigation();
+  */
 }
 
 exports.getCurrentOsakeMyyntihinta = async (page, osake) => {
