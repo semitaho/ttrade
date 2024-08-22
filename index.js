@@ -11,7 +11,14 @@ const { doJob }  = require('./work');
 
 exports.checkStocks = async (req, res) => {
   console.log('starting to trade');
-  await doJob();
   console.log('trade completed.')
 
 };
+// Call start
+(async() => {
+    console.log('before start');
+  
+    await doJob();
+    console.log('after start');
+  })();
+
