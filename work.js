@@ -1,9 +1,27 @@
-const fetch = require('node-fetch');
+const fetch = require("node-fetch");
 
-const { createBrowser, fetchYleistiedot, fetchVertailut, getCurrentOsakeMyyntihinta, acceptCookies, login, navigateToOsakePage, keraaOsakeData, keraaSeurantalistaOsakkeet, buy, sell } = require('./nordnet-robot');
-const { VOITTO, VALITYSPALKKIOBUYSELL, SUMMAPERINDIKAATTORI } = require('./indicators');
+const {
+  createBrowser,
+  fetchYleistiedot,
+  fetchVertailut,
+  getCurrentOsakeMyyntihinta,
+  acceptCookies,
+  login,
+  navigateToOsakePage,
+  keraaOsakeData,
+  keraaSeurantalistaOsakkeet,
+  buy,
+  hasActiveToimeksianto,
+  sell,
+} = require("./nordnet-robot");
+const {
+  VOITTO,
+  VALITYSPALKKIOBUYSELL,
+  SUMMAPERINDIKAATTORI,
+} = require("./indicators");
 
 const AIKA_BETWEEN_MINUTES = 5;
+const OSAKE_MAPS = { NVDA: "NVIDIA" };
 function aikaBetween(currentTime, osake) {
   var diff = (currentTime.getTime() - osake.aika.getTime()) / 1000;
   diff /= 60;
@@ -13,32 +31,44 @@ function aikaBetween(currentTime, osake) {
 const namesEqual = (osake1, osake2) => {
   const osakeLower1 = osake1.toLowerCase();
   const osakeLower2 = osake2.toLowerCase();
-  return osakeLower1.indexOf(osakeLower2) >= 0 || osakeLower2.indexOf(osakeLower1) >= 0;
-
-
+  return (
+    osakeLower1.indexOf(osakeLower2) >= 0 ||
+    osakeLower2.indexOf(osakeLower1) >= 0
+  );
 };
 
 const shouldSellOrDecrease = (inderesSellList, osakeInstrument) => {
-  const recommendToSell = !!inderesSellList.find((sellItem) => namesEqual(sellItem.nimi, osakeInstrument.nimi));
-  console.log('recommendToSell', osakeInstrument.nimi, recommendToSell);
+  const recommendToSell = !!inderesSellList.find((sellItem) =>
+    namesEqual(sellItem.nimi, osakeInstrument.nimi)
+  );
+  console.log("recommendToSell", osakeInstrument.nimi, recommendToSell);
   return recommendToSell;
 };
 
 const checkSellOsake = async (page, inderesSellList, yleistiedot) => {
   for (let i = 0; i < yleistiedot.osakkeet.length; i++) {
     const osakeInstrument = yleistiedot.osakkeet[i];
-    console.log('osake instrument for', osakeInstrument.nimi);
-    const hasAvoinToimeksianto = yleistiedot.avoimetToimeksiannot.find(toimeksianto => toimeksianto.insref === osakeInstrument.insref);
+    console.log("osake instrument for", osakeInstrument.nimi);
+    const hasAvoinToimeksianto = yleistiedot.avoimetToimeksiannot.find(
+      (toimeksianto) => toimeksianto.insref === osakeInstrument.insref
+    );
     if (hasAvoinToimeksianto) {
-      console.log('has already avoin toimeksianto', osakeInstrument.nimi);
+      console.log("has already avoin toimeksianto", osakeInstrument.nimi);
       continue;
     }
     const hinta = await getCurrentOsakeMyyntihinta(page, osakeInstrument);
-    const canSell = shouldSellOrDecrease(inderesSellList, osakeInstrument) && ((osakeInstrument.maara * osakeInstrument.kurssi) + VALITYSPALKKIOBUYSELL + VOITTO) <= (hinta * osakeInstrument.maara);
+    const canSell =
+      shouldSellOrDecrease(inderesSellList, osakeInstrument) &&
+      osakeInstrument.maara * osakeInstrument.kurssi +
+        VALITYSPALKKIOBUYSELL +
+        VOITTO <=
+        hinta * osakeInstrument.maara;
     if (canSell) {
-      console.log('NYT MYYDÄÄN osake: ' + osakeInstrument.nimi + ' markkinahintaan.');
+      console.log(
+        "NYT MYYDÄÄN osake: " + osakeInstrument.nimi + " markkinahintaan."
+      );
       await sell(page, osakeInstrument);
-      console.log('SOLD osake for toimeksianto: ' + osakeInstrument.nimi);
+      console.log("SOLD osake for toimeksianto: " + osakeInstrument.nimi);
       return true;
     }
   }
@@ -46,11 +76,42 @@ const checkSellOsake = async (page, inderesSellList, yleistiedot) => {
 };
 
 exports.doJob = async () => {
-
   const page = await createBrowser();
-  await page.goto('https://www.nordnet.fi/kirjaudu');
+  await page.goto("https://www.nordnet.fi/kirjaudu");
   await acceptCookies(page);
   await login(page);
+  await page.waitForNavigation();
+  const keys = Object.keys(OSAKE_MAPS);
+  for (const osake of keys) {
+    console.log(`checking osake: ${osake}`);
+    const onkoToimeksiantoa = await hasActiveToimeksianto(
+      page,
+      OSAKE_MAPS[osake]
+    );
+    //  const suljeButton = await page.waitForXPath("//button[contains(., 'Sulje')]");
+
+    if (onkoToimeksiantoa) {
+      console.log(`has active toimeksianto: ${osake}`);
+      //await suljeButton.click();
+      // return;
+    }
+    await page.goto("https://www.nordnet.fi/seurantalistat");
+    const clickable = await page.waitForXPath(
+      `//section[@id='tabs-tabpanel-0']//div[@role='row' and contains(.,'${OSAKE_MAPS[osake]}') ]//a[contains(.,'Osta')]`
+    );
+    await clickable.click();
+    // tarjoustasot
+    const selector = `//div[contains(., 'Osto' )]`;
+    const ostoDiv = await page.waitForXPath(selector);
+    if (ostoDiv) {
+        const textContent = await page.$eval(selector, el => el.textContent.trim());
+
+        console.log('kool...', textContent);
+    }
+    console.log("suljetaan..."+ostoDiv.text);
+    //await suljeButton.click();
+  }
+
   /*
   const yleistiedot = await fetchYleistiedot(page);
 
@@ -106,5 +167,4 @@ exports.doJob = async () => {
   }
 
     */
-
-}
+};

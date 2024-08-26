@@ -50,12 +50,24 @@ exports.login = async(page) => {
   */
 }
 
+exports.hasActiveToimeksianto = hasActiveToimeksianto;
+async function hasActiveToimeksianto(page, osakeTitle){
+    console.log('noniin');
+   // await page.$('[data-testid="order-notifications-badge"]');
+    const button = await page.waitForXPath("//button[contains(., 'Toimeksiannot')]");
+    console.log('jaajaa', button);
+    await button.click();
+  //  const [element] = await page.$x(`//h3[contains(text(), '${osakeTitle}')]`);
+  //  return !!element;
+}
+
 exports.getCurrentOsakeMyyntihinta = async (page, osake) => {
   await page.goto(osake.myyhref);
   await page.waitFor('#price');
   const hinta = await page.$eval('#price', id =>  +(id.value.replace(',', '.')));
   return hinta;
 };
+
 
 const navigateToOsakePage = async (page, osake) => {
 
