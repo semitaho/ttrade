@@ -35,7 +35,7 @@ async function createBrowser() {
       "--no-first-run",
       "--no-zygote",
     ],
-    headless: false,
+    headless: process.env.HEADLESS || false,
   });
   const page = await browser.newPage();
 
