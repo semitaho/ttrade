@@ -1,6 +1,5 @@
 import puppeteer from "puppeteer";
 import { PageTarget } from "puppeteer";
-import proxyChain from "proxy-chain";
 
 const proxyUrls = [
   "65.109.232.223",
@@ -36,7 +35,7 @@ async function createBrowser() {
       "--no-first-run",
       "--no-zygote",
     ],
-    headless: true,
+    headless: false,
   });
   const page = await browser.newPage();
 
@@ -54,11 +53,15 @@ export async function navigateMedium() {
   const client = await page.target().createCDPSession();
   await client.send("Network.clearBrowserCookies");
 
-  const pages = [
-    "https://medium.com/@semitaho/try-again-with-spring-retry-20170f69d5ad",
-    "https://medium.com/@semitaho/making-things-optional-to-prevent-nullpointerexceptions-9cf996896308?sk=a9771b3642ded8cd41bc185947513eb8"
-  ];
+ 
+  await page.goto("https://medium.com/@semitaho");
+  
+  const selector = `//article//a`;
 
+  const pages = await page.$$eval("xpath/.//article//a[descendant::h2]", links => links.map(a => a.href));
+  console.log('web pages',pages);
+
+  
   for (const webpage of pages) {
     await page.goto(
        webpage
@@ -68,8 +71,9 @@ export async function navigateMedium() {
     console.log('reading page: '+webpage+", done");
 
   }
-  await browser.close();
+  //await browser.close();
   console.log('all ok..');
+  
  
 }
 
