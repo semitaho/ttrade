@@ -1,4 +1,3 @@
-const fetch = require("node-fetch");
 
 const {
   createBrowser,
@@ -75,7 +74,7 @@ const checkSellOsake = async (page, inderesSellList, yleistiedot) => {
   return false;
 };
 
-exports.doJob = async () => {
+export async function doJob() {
   const page = await createBrowser();
   await page.goto("https://www.nordnet.fi/kirjaudu");
   await acceptCookies(page);

@@ -1,4 +1,3 @@
-const { doJob }  = require('./work');
 
 /**
  * Background Cloud Function to be triggered by Pub/Sub.
@@ -9,15 +8,14 @@ const { doJob }  = require('./work');
  * @param {object} context The event metadata.
  */
 
-exports.checkStocks = async (req, res) => {
-  console.log('starting to trade');
-  console.log('trade completed.')
+import functions  from '@google-cloud/functions-framework';
+import  { navigateMedium } from './medium.js';
 
-};
-// Call start
-(async() => {
-    console.log('before start');
-    await doJob();
-    console.log('after start');
-  })();
+// Register an HTTP function with the Functions Framework that will be executed
+// when you make an HTTP request to the deployed function's endpoint.
+functions.http('readArticles', async(req, res) => {
+  await navigateMedium();
+  res.send('ok');
+});
+
 
